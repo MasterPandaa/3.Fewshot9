@@ -1,6 +1,7 @@
-import sys
 import math
 import random
+import sys
+
 import pygame
 
 # -------------------------------
@@ -9,7 +10,7 @@ import pygame
 TILE_SIZE = 40  # Pixel per grid tile
 FPS = 60
 PACMAN_SPEED = 3  # pixels per frame
-GHOST_SPEED = 2   # pixels per frame (slower than Pacman)
+GHOST_SPEED = 2  # pixels per frame (slower than Pacman)
 POWER_DURATION = 8.0  # seconds
 
 # Colors
@@ -35,7 +36,7 @@ maze_layout = [
     [1, 2, 2, 2, 2, 2, 1],
     [1, 3, 1, 1, 1, 3, 1],
     [1, 2, 2, 2, 2, 2, 1],
-    [1, 1, 1, 1, 1, 1, 1]
+    [1, 1, 1, 1, 1, 1, 1],
 ]
 
 ROWS = len(maze_layout)
@@ -54,8 +55,9 @@ DIRS = [DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT]
 
 
 def grid_to_pixel(col: int, row: int) -> pygame.Vector2:
-    return pygame.Vector2(col * TILE_SIZE + TILE_SIZE // 2,
-                          row * TILE_SIZE + TILE_SIZE // 2)
+    return pygame.Vector2(
+        col * TILE_SIZE + TILE_SIZE // 2, row * TILE_SIZE + TILE_SIZE // 2
+    )
 
 
 def pixel_to_grid(pos: pygame.Vector2) -> tuple[int, int]:
@@ -116,12 +118,18 @@ class Pacman:
 
     def is_centered_on_tile(self) -> bool:
         center = grid_to_pixel(*pixel_to_grid(self.pos))
-        return (abs(self.pos.x - center.x) < 2 and abs(self.pos.y - center.y) < 2)
+        return abs(self.pos.x - center.x) < 2 and abs(self.pos.y - center.y) < 2
 
-    def can_move(self, direction: pygame.Vector2, future_pos: pygame.Vector2 | None = None) -> bool:
+    def can_move(
+        self, direction: pygame.Vector2, future_pos: pygame.Vector2 | None = None
+    ) -> bool:
         if direction.length_squared() == 0:
             return True
-        probe_pos = future_pos if future_pos is not None else (self.pos + direction * PACMAN_SPEED)
+        probe_pos = (
+            future_pos
+            if future_pos is not None
+            else (self.pos + direction * PACMAN_SPEED)
+        )
         # Check the tile in the direction of travel near the edge of the tile
         offset = direction * (self.radius - 4)
         test_point = probe_pos + offset
@@ -152,14 +160,26 @@ class Pacman:
             angle_offset = 270
         start_angle = math.radians(self.mouth_angle + angle_offset)
         end_angle = math.radians(360 - self.mouth_angle + angle_offset)
-        pygame.draw.circle(surface, YELLOW, (int(self.pos.x), int(self.pos.y)), self.radius)
+        pygame.draw.circle(
+            surface, YELLOW, (int(self.pos.x), int(self.pos.y)), self.radius
+        )
         # Mouth: draw over with background color to simulate mouth
         mouth_radius = self.radius
-        pygame.draw.polygon(surface, BLACK, [
-            (self.pos.x, self.pos.y),
-            (self.pos.x + mouth_radius * math.cos(start_angle), self.pos.y - mouth_radius * math.sin(start_angle)),
-            (self.pos.x + mouth_radius * math.cos(end_angle), self.pos.y - mouth_radius * math.sin(end_angle))
-        ])
+        pygame.draw.polygon(
+            surface,
+            BLACK,
+            [
+                (self.pos.x, self.pos.y),
+                (
+                    self.pos.x + mouth_radius * math.cos(start_angle),
+                    self.pos.y - mouth_radius * math.sin(start_angle),
+                ),
+                (
+                    self.pos.x + mouth_radius * math.cos(end_angle),
+                    self.pos.y - mouth_radius * math.sin(end_angle),
+                ),
+            ],
+        )
 
 
 class Ghost:
@@ -190,12 +210,18 @@ class Ghost:
 
     def is_centered_on_tile(self) -> bool:
         center = grid_to_pixel(*pixel_to_grid(self.pos))
-        return (abs(self.pos.x - center.x) < 2 and abs(self.pos.y - center.y) < 2)
+        return abs(self.pos.x - center.x) < 2 and abs(self.pos.y - center.y) < 2
 
-    def can_move(self, direction: pygame.Vector2, future_pos: pygame.Vector2 | None = None) -> bool:
+    def can_move(
+        self, direction: pygame.Vector2, future_pos: pygame.Vector2 | None = None
+    ) -> bool:
         if direction.length_squared() == 0:
             return True
-        probe_pos = future_pos if future_pos is not None else (self.pos + direction * GHOST_SPEED)
+        probe_pos = (
+            future_pos
+            if future_pos is not None
+            else (self.pos + direction * GHOST_SPEED)
+        )
         offset = direction * (self.radius - 4)
         test_point = probe_pos + offset
         col, row = pixel_to_grid(test_point)
@@ -224,7 +250,9 @@ class Ghost:
         x, y = int(self.pos.x), int(self.pos.y)
         # Body
         pygame.draw.circle(surface, color, (x, y - self.radius // 3), self.radius)
-        rect = pygame.Rect(x - self.radius, y - self.radius // 3, self.radius * 2, self.radius)
+        rect = pygame.Rect(
+            x - self.radius, y - self.radius // 3, self.radius * 2, self.radius
+        )
         pygame.draw.rect(surface, color, rect, border_radius=8)
         # Eyes
         eye_offset = 6
@@ -322,7 +350,9 @@ class Game:
 
         # Handle collisions Pacman vs Ghosts
         for g in self.ghosts:
-            if self.circle_collision(self.pacman.pos, self.pacman.radius, g.pos, g.radius):
+            if self.circle_collision(
+                self.pacman.pos, self.pacman.radius, g.pos, g.radius
+            ):
                 if self.power_timer > 0 and g.frightened:
                     # Eat ghost
                     self.score += 200
@@ -340,11 +370,15 @@ class Game:
                     g.set_frightened(False)
 
         # Win condition: all pellets eaten
-        if not any(2 in row for row in self.grid) and not any(3 in row for row in self.grid):
+        if not any(2 in row for row in self.grid) and not any(
+            3 in row for row in self.grid
+        ):
             self.win = True
 
     @staticmethod
-    def circle_collision(p1: pygame.Vector2, r1: int, p2: pygame.Vector2, r2: int) -> bool:
+    def circle_collision(
+        p1: pygame.Vector2, r1: int, p2: pygame.Vector2, r2: int
+    ) -> bool:
         return p1.distance_to(p2) <= (r1 + r2 - 4)
 
     def draw(self):
@@ -365,7 +399,9 @@ class Game:
         if self.game_over:
             self.draw_center_text("Game Over - Press R to Restart", self.big_font, RED)
         elif self.win:
-            self.draw_center_text("You Win! - Press R to Restart", self.big_font, YELLOW)
+            self.draw_center_text(
+                "You Win! - Press R to Restart", self.big_font, YELLOW
+            )
 
         pygame.display.flip()
 
@@ -381,9 +417,13 @@ class Game:
                 else:
                     # pellets
                     if tile == 2:
-                        pygame.draw.circle(surface, WHITE, (x + TILE_SIZE // 2, y + TILE_SIZE // 2), 4)
+                        pygame.draw.circle(
+                            surface, WHITE, (x + TILE_SIZE // 2, y + TILE_SIZE // 2), 4
+                        )
                     elif tile == 3:
-                        pygame.draw.circle(surface, WHITE, (x + TILE_SIZE // 2, y + TILE_SIZE // 2), 8)
+                        pygame.draw.circle(
+                            surface, WHITE, (x + TILE_SIZE // 2, y + TILE_SIZE // 2), 8
+                        )
 
     def draw_hud(self, surface: pygame.Surface):
         hud_rect = pygame.Rect(0, HEIGHT - HUD_HEIGHT, WIDTH, HUD_HEIGHT)
